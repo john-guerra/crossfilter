@@ -1,5 +1,5 @@
 (function(exports){
-crossfilter.version = "1.0.3";
+crossfilter.version = "1.1.0";
 function crossfilter_identity(d) {
   return d;
 }
@@ -23,6 +23,8 @@ function bisect_by(f) {
   // present in a, the insertion point will be before (to the left of) any
   // existing entries. The return value is suitable for use as the first
   // argument to `array.splice` assuming that a is already sorted.
+  // Incomparable values such as NaN and undefined are assumed to be at the end
+  // of the array.
   //
   // The returned insertion point i partitions the array a into two halves so
   // that all v < x for v in a[lo:i] for the left side and all v >= x for v in
@@ -44,8 +46,9 @@ function bisect_by(f) {
   // a[i:hi] for the right side.
   function bisectRight(a, x, lo, hi) {
     while (lo < hi) {
-      var mid = lo + hi >> 1;
-      if (x < f(a[mid])) hi = mid;
+      var mid = lo + hi >> 1,
+          y = f(a[mid]);
+      if (x < y || !(y <= y)) hi = mid;
       else lo = mid + 1;
     }
     return lo;
@@ -770,7 +773,7 @@ function crossfilter() {
       return filterIndex((refilter = crossfilter_filterAll)(values));
     }
 
-    // Returns the top K selected records, based on this dimension's order.
+    // Returns the top K selected records based on this dimension's order.
     // Note: observes this dimension's filter, unlike group and groupAll.
     function top(k) {
       var array = [],
@@ -786,8 +789,8 @@ function crossfilter() {
 
       return array;
     }
-    
-    // Basically same as top but on ascending order
+
+    // Returns the bottom K selected records based on this dimension's order.
     // Note: observes this dimension's filter, unlike group and groupAll.
     function bottom(k) {
       var array = [],
